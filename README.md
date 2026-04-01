@@ -24,7 +24,7 @@ paper_trader/
 ## Screenshots
 
 ### Login Page
-![Login](Screenshots/Sign Up.png)
+![Login](Screenshots/SignUp.png)
 
 ### Dashboard
 ![Dashboard](Screenshots/Dashboard.png)
