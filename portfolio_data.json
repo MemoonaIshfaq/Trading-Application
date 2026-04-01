@@ -1,0 +1,66 @@
+{
+  "users": {
+    "demo": {
+      "password": "demo",
+      "cash": 10000.0,
+      "portfolio": {},
+      "transactions": []
+    },
+    "Keisha": {
+      "password": "Keisha123",
+      "cash": 10000.0,
+      "portfolio": {},
+      "transactions": []
+    },
+    "Maria": {
+      "password": "Maria123",
+      "cash": 9914.91,
+      "portfolio": {
+        "AX": 1
+      },
+      "transactions": [
+        {
+          "date": "2026-04-01 15:37",
+          "action": "BUY",
+          "symbol": "AX",
+          "quantity": 1,
+          "price": 85.09,
+          "total": 85.09
+        }
+      ]
+    },
+    "Fatime": {
+      "password": "12345678",
+      "cash": 8731.05,
+      "portfolio": {
+        "AAPL": 5
+      },
+      "transactions": [
+        {
+          "date": "2026-04-01 15:40",
+          "action": "BUY",
+          "symbol": "AAPL",
+          "quantity": 1,
+          "price": 253.79,
+          "total": 253.79
+        },
+        {
+          "date": "2026-04-01 15:40",
+          "action": "BUY",
+          "symbol": "AAPL",
+          "quantity": 5,
+          "price": 253.79,
+          "total": 1268.95
+        },
+        {
+          "date": "2026-04-01 15:40",
+          "action": "SELL",
+          "symbol": "AAPL",
+          "quantity": 1,
+          "price": 253.79,
+          "total": 253.79
+        }
+      ]
+    }
+  }
+}
