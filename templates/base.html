@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paper Trader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --border: #1e2230;
+      --accent: #00e5a0;
+      --accent2: #ff4d6d;
+      --accent3: #5b8dee;
+      --text: #e8eaf0;
+      --muted: #5c6278;
+      --green: #00c97a;
+      --red: #ff4d6d;
+      --radius: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .nav-brand span { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-user { color: var(--muted); font-size: 0.85rem; }
+    .nav-user strong { color: var(--text); }
+    .btn-nav {
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+    main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .flash-error {
+      background: rgba(255,77,109,0.1);
+      border: 1px solid var(--red);
+      color: var(--red);
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    {% block extra_style %}{% endblock %}
+  </style>
+</head>
+<body>
+  {% if session.get('username') %}
+  <nav>
+    <div class="nav-brand">Paper<span>Trader</span></div>
+    <div class="nav-right">
+      <span class="nav-user">Welcome, <strong>{{ session.username }}</strong></span>
+      <a href="/logout" class="btn-nav">Logout</a>
+    </div>
+  </nav>
+  {% endif %}
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
