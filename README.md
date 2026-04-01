@@ -21,6 +21,20 @@ paper_trader/
 
 ---
 
+## Screenshots
+
+### Login Page
+![Login](Screenshots/Sign Up.png)
+
+### Dashboard
+![Dashboard](Screenshots/Dashboard.png)
+
+### Chart
+![Chart](Screenshots/Charts.png)
+
+### Portfolio
+![Portfolio](Screenshots/Portfolio.png)
+
 ## Step-by-Step Setup
 
 ### Step 1 — Install Python 3
