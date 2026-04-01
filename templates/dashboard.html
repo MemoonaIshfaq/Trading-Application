@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block extra_style %}
+.grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+h2 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+/* Search */
+.search-row { display: flex; gap: .6rem; margin-bottom: 1.2rem; }
+.search-input {
+  flex: 1; padding: .7rem 1rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: .95rem; outline: none;
+  transition: border-color .2s;
+}
+.search-input:focus { border-color: var(--accent); }
+.btn-search {
+  padding: .7rem 1.2rem; background: var(--accent);
+  color: #000; font-weight: 700; border: none;
+  border-radius: var(--radius); cursor: pointer; font-size: .9rem;
+  transition: opacity .2s;
+}
+.btn-search:hover { opacity: .8; }
+/* Quote card */
+#quote-area { display: none; margin-bottom: 1.2rem; }
+.quote-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem;
+}
+.quote-symbol { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; }
+.quote-price { font-family: 'DM Mono', monospace; font-size: 1.8rem; color: var(--accent); }
+canvas#price-chart { width: 100% !important; height: 180px !important; }
+/* Trade */
+.trade-row { display: flex; gap: .6rem; margin-top: 1rem; align-items: center; }
+.qty-input {
+  width: 90px; padding: .65rem .8rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: .95rem; outline: none;
+}
+.btn-buy, .btn-sell {
+  flex: 1; padding: .65rem; font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: .9rem; border: none;
+  border-radius: var(--radius); cursor: pointer; transition: opacity .2s;
+}
+.btn-buy { background: var(--green); color: #000; }
+.btn-sell { background: var(--red); color: #fff; }
+.btn-buy:hover, .btn-sell:hover { opacity: .8; }
+/* Portfolio table */
+.ptable { width: 100%; border-collapse: collapse; }
+.ptable th { font-size: .75rem; color: var(--muted); text-align: left; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.ptable td { padding: .6rem 0; font-size: .88rem; border-bottom: 1px solid var(--border); }
+.ptable td:last-child, .ptable th:last-child { text-align: right; }
+.symbol-tag { font-family: 'DM Mono', monospace; color: var(--accent); font-weight: 500; }
+/* Stats */
+.stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.stat-box { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; }
+.stat-label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: var(--text); font-weight: 500; }
+.stat-value.green { color: var(--green); }
+/* Transactions */
+.tx-list { max-height: 320px; overflow-y: auto; }
+.tx-item { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px solid var(--border); font-size: .83rem; }
+.tx-badge { font-family: 'DM Mono', monospace; font-size: .72rem; padding: .2rem .5rem; border-radius: 4px; font-weight: 600; }
+.tx-badge.BUY { background: rgba(0,201,122,.15); color: var(--green); }
+.tx-badge.SELL { background: rgba(255,77,109,.15); color: var(--red); }
+.tx-symbol { font-family: 'DM Mono', monospace; color: var(--accent); margin-left: .4rem; }
+.tx-right { text-align: right; color: var(--muted); }
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--surface); border: 1px solid var(--accent);
+  color: var(--accent); padding: .8rem 1.4rem;
+  border-radius: var(--radius); font-size: .88rem; display: none;
+  z-index: 999; animation: slideIn .3s ease;
+}
+.toast.error { border-color: var(--red); color: var(--red); }
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.empty { color: var(--muted); font-size: .85rem; padding: 1rem 0; }
+{% endblock %}
+
+{% block content %}
+<!-- Stats Bar -->
+<div class="stats">
+  <div class="stat-box">
+    <div class="stat-label">Cash Balance</div>
+    <div class="stat-value">${{ "{:,.2f}".format(cash) }}</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Portfolio Value</div>
+    <div class="stat-value green">${{ "{:,.2f}".format(total_value) }}</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Holdings</div>
+    <div class="stat-value">{{ portfolio | length }}</div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- LEFT COLUMN -->
+  <div>
+    <!-- Search + Chart -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <h2>Search & Trade</h2>
+      <div class="search-row">
+        <input class="search-input" id="search-sym" placeholder="Symbol e.g. AAPL, BHP.AX, NAB.AX" />
+        <button class="btn-search" onclick="fetchQuote()">Search</button>
+      </div>
+
+      <div id="quote-area">
+        <div class="quote-header">
+          <div>
+            <div class="quote-symbol" id="q-symbol">—</div>
+            <div style="color:var(--muted);font-size:.82rem" id="q-name"></div>
+          </div>
+          <div class="quote-price" id="q-price">$—</div>
+        </div>
+        <canvas id="price-chart"></canvas>
+        <div class="trade-row">
+          <input class="qty-input" id="trade-qty" type="number" min="1" value="1" placeholder="Qty">
+          <button class="btn-buy" onclick="trade('buy')">Buy</button>
+          <button class="btn-sell" onclick="trade('sell')">Sell</button>
+        </div>
+        <div id="trade-cost" style="font-size:.8rem;color:var(--muted);margin-top:.5rem;font-family:'DM Mono',monospace"></div>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+      <h2>Transaction History</h2>
+      {% if transactions %}
+      <div class="tx-list">
+        {% for tx in transactions %}
+        <div class="tx-item">
+          <div>
+            <span class="tx-badge {{ tx.action }}">{{ tx.action }}</span>
+            <span class="tx-symbol">{{ tx.symbol }}</span>
+            <span style="color:var(--muted);margin-left:.4rem">×{{ tx.quantity }}</span>
+          </div>
+          <div class="tx-right">
+            <div style="color:var(--text)">${{ "{:,.2f}".format(tx.total) }}</div>
+            <div style="font-size:.75rem">@${{ tx.price }} · {{ tx.date }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty">No transactions yet. Search for a stock and make your first trade!</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Portfolio -->
+  <div class="card">
+    <h2>Portfolio</h2>
+    {% if portfolio %}
+    <table class="ptable">
+      <thead>
+        <tr>
+          <th>Stock</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Value</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in portfolio %}
+        <tr>
+          <td><span class="symbol-tag">{{ h.symbol }}</span></td>
+          <td>{{ h.quantity }}</td>
+          <td style="font-family:'DM Mono',monospace">
+            {% if h.price %}${{ "{:,.2f}".format(h.price) }}{% else %}—{% endif %}
+          </td>
+          <td style="font-family:'DM Mono',monospace">
+            {% if h.value %}${{ "{:,.2f}".format(h.value) }}{% else %}—{% endif %}
+          </td>
+          <td>
+            <button onclick="quickLoad('{{ h.symbol }}')" style="background:none;border:none;color:var(--accent3);cursor:pointer;font-size:.75rem">→</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div style="margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:.85rem">
+      <span style="color:var(--muted)">Cash</span>
+      <span style="font-family:'DM Mono',monospace">${{ "{:,.2f}".format(cash) }}</span>
+    </div>
+    {% else %}
+    <div class="empty">Your portfolio is empty. Start buying stocks!</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let currentSymbol = null;
+let currentPrice = null;
+let chart = null;
+
+async function fetchQuote(sym) {
+  const symbol = sym || document.getElementById('search-sym').value.trim().toUpperCase();
+  if (!symbol) return;
+  document.getElementById('search-sym').value = symbol;
+
+  try {
+    const res = await fetch(`/api/quote/${symbol}`);
+    const data = await res.json();
+    if (data.error) { showToast(data.error, true); return; }
+
+    currentSymbol = data.symbol;
+    currentPrice = data.price;
+
+    document.getElementById('q-symbol').textContent = data.symbol;
+    document.getElementById('q-price').textContent = '$' + data.price.toLocaleString('en-AU', {minimumFractionDigits:2});
+    document.getElementById('quote-area').style.display = 'block';
+    updateCost();
+    renderChart(data.history);
+  } catch(e) { showToast('Network error', true); }
+}
+
+function renderChart(history) {
+  const labels = history.map(h => h.date);
+  const values = history.map(h => h.close);
+  const ctx = document.getElementById('price-chart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: '#00e5a0',
+        borderWidth: 1.5,
+        fill: true,
+        backgroundColor: 'rgba(0,229,160,0.07)',
+        pointRadius: 0,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          ticks: { color: '#5c6278', font: { family: 'DM Mono', size: 11 } },
+          grid: { color: '#1e2230' }
+        }
+      }
+    }
+  });
+}
+
+function updateCost() {
+  const qty = parseInt(document.getElementById('trade-qty').value) || 0;
+  if (currentPrice && qty > 0) {
+    const cost = (currentPrice * qty).toLocaleString('en-AU', {minimumFractionDigits:2});
+    document.getElementById('trade-cost').textContent = `Estimated cost: $${cost}`;
+  } else {
+    document.getElementById('trade-cost').textContent = '';
+  }
+}
+document.getElementById('trade-qty').addEventListener('input', updateCost);
+
+async function trade(action) {
+  if (!currentSymbol) { showToast('Search for a stock first', true); return; }
+  const qty = parseInt(document.getElementById('trade-qty').value);
+  if (!qty || qty < 1) { showToast('Enter a valid quantity', true); return; }
+
+  const res = await fetch('/api/trade', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, symbol: currentSymbol, quantity: qty })
+  });
+  const data = await res.json();
+  if (data.error) { showToast(data.error, true); return; }
+
+  showToast(`${action.toUpperCase()} ${qty}× ${currentSymbol} @ $${data.price}`);
+  setTimeout(() => location.reload(), 1200);
+}
+
+function quickLoad(symbol) {
+  document.getElementById('search-sym').value = symbol;
+  fetchQuote(symbol);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// Enter key on search
+document.getElementById('search-sym').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fetchQuote();
+});
+</script>
+{% endblock %}
